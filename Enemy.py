@@ -13,7 +13,7 @@ class Enemy:
         self.y = y
         self.health = 5
         self.max_health = 5
-        self.speed = 4
+        self.speed = 3
 
     def move(self):
         self.y += self.speed

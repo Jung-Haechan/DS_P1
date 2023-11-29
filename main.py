@@ -1,9 +1,9 @@
 import pygame
 import math
 import random
-from Bullet import Bullet, RegisterBullet, CapacitorBullet
+from Bullet import Bullet, RegisterBullet, CapacitorBullet, OscillatorBullet
 from Enemy import Enemy
-from Item import RegisterItem, CapacitorItem
+from Item import RegisterItem, CapacitorItem, OscillatorItem
 from configs import width, height
 
 
@@ -25,6 +25,8 @@ def create_item():
         return RegisterItem(random.randint(0, width - 50), -50)
     elif level == 1:
         return CapacitorItem(random.randint(0, width - 50), -50)
+    elif level == 2:
+        return OscillatorItem(random.randint(0, width - 50), -50)
     else:
         return CapacitorItem(random.randint(0, width - 50), -50)
 
@@ -38,13 +40,15 @@ def create_bullet(player_x, player_y):
         return RegisterBullet(player_x, player_y, angle)
     elif level == 2:
         return CapacitorBullet(player_x, player_y, angle)
+    elif level == 3:
+        return OscillatorBullet(player_x, player_y, angle)
     else:
         return None
 
 
-level = 1
+level = 3
 exp = 0
-max_exp = 5
+max_exp = 10
 
 # 플레이어 설정
 player_img = pygame.image.load('player.png')
@@ -90,7 +94,7 @@ while running:
     # 아이템 획득 체크 및 이동
     for item in items[:]:
         item.move()
-        if is_collision(player_x, player_y, item.x, item.y, 50):
+        if is_collision(player_x, player_y, item.x, item.y, 20):
             item_active = True
             last_item_time = pygame.time.get_ticks()
             items.remove(item)
@@ -119,11 +123,9 @@ while running:
     for bullet in bullets[:]:
         bullet.move()
         for enemy in enemies[:]:
-            if is_collision(enemy.x, enemy.y, bullet.x, bullet.y, enemy.size[0]):
+            if is_collision(enemy.x, enemy.y, bullet.x, bullet.y, enemy.size[0]) and bullet.cooltime == 0:
                 enemy.health -= bullet.power
-                bullet.effect(enemy, enemies, effects)
-                if bullet in bullets:
-                    bullets.remove(bullet)
+                bullet.effect(enemy, enemies, effects, bullets)
                 if enemy.health <= 0:
                     if enemy in enemies:
                         enemies.remove(enemy)
