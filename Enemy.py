@@ -7,6 +7,8 @@ from configs import width, height
 class Enemy:
     def __init__(self, x, y):
         self.image = pygame.image.load('enemy.png')
+        self.size = [30, 30]
+        self.image = pygame.transform.scale(self.image, (self.size[0], self.size[1]))
         self.x = x
         self.y = y
         self.health = 5
@@ -22,7 +24,7 @@ class Enemy:
 
     def draw_health_bar(self, surface):
         # 체력 바의 길이와 높이
-        bar_length = 50
+        bar_length = self.size[0]
         bar_height = 5
         # 체력에 비례하여 채워질 길이 계산
         fill = (self.health / self.max_health) * bar_length

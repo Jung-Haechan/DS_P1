@@ -27,10 +27,10 @@ class Item:
 class RegisterItem(Item):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.image = pygame.image.load('register.png')  # 폭발 아이템 이미지
+        self.image = pygame.image.load('register_item.png')  # 폭발 아이템 이미지
 
 
 class CapacitorItem(Item):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.image = pygame.image.load('capacity.png')  # 폭발 아이템 이미지
+        self.image = pygame.image.load('capacitor_item.png')  # 폭발 아이템 이미지

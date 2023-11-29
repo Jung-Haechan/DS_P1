@@ -1,9 +1,9 @@
 import pygame
 import math
 import random
-from Bullet import Bullet
+from Bullet import Bullet, RegisterBullet, CapacitorBullet
 from Enemy import Enemy
-from Item import Register, Capacitor
+from Item import RegisterItem, CapacitorItem
 from configs import width, height
 
 
@@ -15,16 +15,36 @@ font = pygame.font.SysFont(None, 36)
 
 
 # 충돌 감지 함수
-def is_collision(x1, y1, x2, y2, distance=27):
+def is_collision(x1, y1, x2, y2, distance=30):
     return math.sqrt((math.pow(x1 - x2, 2)) + (math.pow(y1 - y2, 2))) < distance
 
-# 아이템 랜덤 생성 함수
-def create_random_item():
-    if random.choice([True, False]):
-        return Register(random.randint(0, width - 50), -50)
-    else:
-        return Capacitor(random.randint(0, width - 50), -50)
 
+# 아이템 랜덤 생성 함수
+def create_item():
+    if level == 0:
+        return RegisterItem(random.randint(0, width - 50), -50)
+    elif level == 1:
+        return CapacitorItem(random.randint(0, width - 50), -50)
+    else:
+        return CapacitorItem(random.randint(0, width - 50), -50)
+
+
+def create_bullet(player_x, player_y):
+    mx, my = pygame.mouse.get_pos()
+    angle = math.atan2(my - player_y, mx - player_x)
+    if level == 0:
+        return Bullet(player_x, player_y, angle)
+    elif level == 1:
+        return RegisterBullet(player_x, player_y, angle)
+    elif level == 2:
+        return CapacitorBullet(player_x, player_y, angle)
+    else:
+        return None
+
+
+level = 1
+exp = 0
+max_exp = 5
 
 # 플레이어 설정
 player_img = pygame.image.load('player.png')
@@ -39,6 +59,7 @@ items = []
 item_active = False
 item_effect_duration = 5000
 last_item_time = 0
+effects = []
 
 running = True
 while running:
@@ -49,13 +70,11 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            mx, my = pygame.mouse.get_pos()
-            angle = math.atan2(my - player_y, mx - player_x)
-            bullets.append(Bullet(player_x, player_y, angle))
+            bullets.append(create_bullet(player_x, player_y))
 
     # 아이템 생성
     if random.randint(1, 100) == 1 and not items:
-        items.append(create_random_item())
+        items.append(create_item())
 
     # 아이템 효과 시간 확인
     if item_active and current_time - last_item_time > item_effect_duration:
@@ -75,6 +94,10 @@ while running:
             item_active = True
             last_item_time = pygame.time.get_ticks()
             items.remove(item)
+            exp += 1
+            if exp == max_exp:
+                level += 1
+                exp = 0
         elif item.y > height:
             items.remove(item)
         else:
@@ -87,7 +110,8 @@ while running:
         enemy.move()
         if enemy.y > height:
             player_health -= 5
-            enemies.remove(enemy)
+            if enemy in enemies:
+                enemies.remove(enemy)
         else:
             enemy.draw(screen)
 
@@ -95,22 +119,39 @@ while running:
     for bullet in bullets[:]:
         bullet.move()
         for enemy in enemies[:]:
-            if is_collision(enemy.x, enemy.y, bullet.x, bullet.y):
+            if is_collision(enemy.x, enemy.y, bullet.x, bullet.y, enemy.size[0]):
                 enemy.health -= bullet.power
-                bullets.remove(bullet)
-                enemy.health -= 1
+                bullet.effect(enemy, enemies, effects)
+                if bullet in bullets:
+                    bullets.remove(bullet)
+                if enemy.health <= 0:
+                    if enemy in enemies:
+                        enemies.remove(enemy)
+                break
 
         if bullet.x < 0 or bullet.x > width or bullet.y < 0 or bullet.y > height:
-            bullets.remove(bullet)
+            if bullet in bullets:
+                bullets.remove(bullet)
         else:
             bullet.draw(screen)
+
+    # 이펙트 그리기
+    for effect in effects[:]:
+        effect.update()
+        if effect.finished:
+            effects.remove(effect)
+        else:
+            effect.draw(screen)
+
 
     # 플레이어 그리기
     screen.blit(player_img, (player_x, player_y))
 
     # 체력 표시
     health_text = font.render(f'Health: {player_health}', True, (255, 255, 255))
+    exp_text = font.render(f'Item: {exp}/{max_exp}', True, (255, 255, 255))
     screen.blit(health_text, (width - 150, 10))
+    screen.blit(exp_text, (width - 150, 30))
 
     pygame.display.flip()
     clock.tick(60)
