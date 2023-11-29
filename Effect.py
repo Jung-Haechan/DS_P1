@@ -45,3 +45,12 @@ class OscillatorCollisionEffect(Effect):
         images = [pygame.transform.scale(origin_image, (size[0], size[1])) for origin_image in origin_images]
 
         super().__init__(x, y, images, size)
+
+
+class MosfetCollisionEffect(Effect):
+    def __init__(self, x, y):
+        size = [50, 50]
+        origin_images = [pygame.image.load(f"./mosfet_collision_effect/frame_{str(num).zfill(1)}_delay-0.08s.gif") for num in range(0, 8)]
+        images = [pygame.transform.scale(origin_image, (size[0], size[1])) for origin_image in origin_images]
+
+        super().__init__(x, y, images, size)

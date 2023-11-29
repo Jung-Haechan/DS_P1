@@ -34,3 +34,9 @@ class OscillatorItem(Item):
     def __init__(self, x, y):
         super().__init__(x, y)
         self.image = pygame.image.load('oscillator_item.png')  # 폭발 아이템 이미지
+
+
+class MosfetItem(Item):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.image = pygame.image.load('mosfet_item.png')  # 폭발 아이템 이미지

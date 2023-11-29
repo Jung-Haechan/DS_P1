@@ -2,7 +2,7 @@ import math
 import pygame
 from configs import width, height
 import Enemy
-from Effect import CapacitorCollisionEffect, RegisterCollisionEffect, OscillatorCollisionEffect
+from Effect import CapacitorCollisionEffect, RegisterCollisionEffect, OscillatorCollisionEffect, MosfetCollisionEffect
 
 
 # Bullet 클래스
@@ -82,3 +82,22 @@ class OscillatorBullet(Bullet):
     def effect(self, enemy: Enemy.Enemy, enemies, effects, bullets):
         effects.append(OscillatorCollisionEffect(enemy.x + enemy.size[0] / 2, enemy.y + enemy.size[1] / 2))
         self.cooltime = 3  # 쿨타임 설정 (예: 30 프레임)
+
+
+class MosfetBullet(Bullet):
+    def __init__(self, x, y, angle):
+        super().__init__(x, y, angle)
+        self.load_image('mosfet_bullet.png')
+        self.power = 1
+
+    def effect(self, enemy: Enemy.Enemy, enemies, effects, bullets):
+        effects.append(MosfetCollisionEffect(enemy.x + enemy.size[0] / 2, enemy.y + enemy.size[1] / 2))
+        self.cooltime = 3  # 쿨타임 설정 (예: 30 프레임)
+        for i in range(0, 6):
+            bullet = Bullet(self.x, self.y, self.angle + math.pi * i / 3)
+            bullet.cooltime = 3
+            bullets.append(bullet)
+
+        bullets.remove(self)
+
+

@@ -1,9 +1,9 @@
 import pygame
 import math
 import random
-from Bullet import Bullet, RegisterBullet, CapacitorBullet, OscillatorBullet
+from Bullet import Bullet, RegisterBullet, CapacitorBullet, OscillatorBullet, MosfetBullet
 from Enemy import Enemy
-from Item import RegisterItem, CapacitorItem, OscillatorItem
+from Item import RegisterItem, CapacitorItem, OscillatorItem, MosfetItem
 from configs import width, height
 
 
@@ -27,8 +27,10 @@ def create_item():
         return CapacitorItem(random.randint(0, width - 50), -50)
     elif level == 2:
         return OscillatorItem(random.randint(0, width - 50), -50)
+    elif level == 3:
+        return MosfetItem(random.randint(0, width - 50), -50)
     else:
-        return CapacitorItem(random.randint(0, width - 50), -50)
+        return MosfetItem(random.randint(0, width - 50), -50)
 
 
 def create_bullet(player_x, player_y):
@@ -42,11 +44,13 @@ def create_bullet(player_x, player_y):
         return CapacitorBullet(player_x, player_y, angle)
     elif level == 3:
         return OscillatorBullet(player_x, player_y, angle)
+    elif level == 4:
+        return MosfetBullet(player_x, player_y, angle)
     else:
         return None
 
 
-level = 3
+level = 0
 exp = 0
 max_exp = 10
 
@@ -77,7 +81,7 @@ while running:
             bullets.append(create_bullet(player_x, player_y))
 
     # 아이템 생성
-    if random.randint(1, 100) == 1 and not items:
+    if random.randint(1, 50) == 1:
         items.append(create_item())
 
     # 아이템 효과 시간 확인
@@ -108,7 +112,7 @@ while running:
             item.draw(screen)
 
     # 적 생성 및 이동
-    if random.randint(1, 50) == 1:
+    if random.randint(1, 60 - level*10) == 1:
         enemies.append(Enemy(random.randint(0, width - 50), -50))
     for enemy in enemies[:]:
         enemy.move()
