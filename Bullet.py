@@ -10,6 +10,7 @@ class Bullet:
     def __init__(self, x, y, angle):
         self.angle = angle
         self.image = None
+        self.size = [30, 30]
         self.load_image('bullet.png')
         self.x = x
         self.y = y
@@ -22,6 +23,7 @@ class Bullet:
     def load_image(self, image_url):
         self.image = pygame.image.load(image_url)
         self.image = pygame.transform.rotate(self.image, - (math.degrees(self.angle) + 90))
+        self.image = pygame.transform.scale(self.image, (self.size[0], self.size[1]))
 
     def move(self):
         self.x += self.vx
@@ -44,7 +46,7 @@ class Bullet:
 class RegisterBullet(Bullet):
     def __init__(self, x, y, angle):
         super().__init__(x, y, angle)
-        self.load_image('capacitor_bullet.png')
+        self.load_image('register_bullet.png')
 
     def effect(self, enemy: Enemy.Enemy, enemies, effects, bullets):
         self.cooltime = 30  # 쿨타임 설정 (예: 30 프레임)

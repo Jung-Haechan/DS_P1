@@ -2,7 +2,6 @@ import pygame
 from configs import width, height
 
 
-
 # Enemy 클래스
 class Enemy:
     def __init__(self, x, y):
@@ -35,3 +34,17 @@ class Enemy:
         # 체력 바 그리기
         pygame.draw.rect(surface, (255, 0, 0), fill_rect)  # 빨간색으로 채우기
         pygame.draw.rect(surface, (255, 255, 255), border_rect, 1)  # 테두리
+
+
+class ExamEnemy(Enemy):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.image = pygame.image.load('exam_enemy.png')
+        self.image = pygame.transform.scale(self.image, (self.size[0], self.size[1]))
+
+
+class QuizEnemy(Enemy):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.image = pygame.image.load('quiz_enemy.png')
+        self.image = pygame.transform.scale(self.image, (self.size[0], self.size[1]))

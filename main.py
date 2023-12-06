@@ -2,7 +2,7 @@ import pygame
 import math
 import random
 from Bullet import Bullet, RegisterBullet, CapacitorBullet, OscillatorBullet, MosfetBullet
-from Enemy import Enemy
+from Enemy import Enemy, ExamEnemy, QuizEnemy
 from Item import RegisterItem, CapacitorItem, OscillatorItem, MosfetItem
 from configs import width, height
 
@@ -12,6 +12,11 @@ pygame.init()
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
+
+point = 0
+
+print_time = 0
+print_text = None
 
 
 # 충돌 감지 함수
@@ -33,6 +38,16 @@ def create_item():
         return MosfetItem(random.randint(0, width - 50), -50)
 
 
+def create_enemy():
+    enemy_type = random.choice(['exam', 'quiz'])
+    if enemy_type == 'exam':
+        return ExamEnemy(random.randint(0, width - 50), -50)
+    elif enemy_type == 'quiz':
+        return QuizEnemy(random.randint(0, width - 50), -50)
+    else:
+        return Enemy(random.randint(0, width - 50), -50)
+
+
 def create_bullet(player_x, player_y):
     mx, my = pygame.mouse.get_pos()
     angle = math.atan2(my - player_y, mx - player_x)
@@ -50,12 +65,16 @@ def create_bullet(player_x, player_y):
         return None
 
 
-level = 0
+level = 4
 exp = 0
 max_exp = 10
 
+background_img = pygame.image.load('background.png')
+background_img = pygame.transform.scale(background_img, (width, height))
+
 # 플레이어 설정
 player_img = pygame.image.load('player.png')
+player_img = pygame.transform.scale(player_img, (30, 40))
 player_x, player_y = width // 2, height // 2
 player_speed = 8
 player_health = 100
@@ -79,6 +98,13 @@ while running:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             bullets.append(create_bullet(player_x, player_y))
+
+    screen.blit(background_img, (0, 0))
+    #
+    # # 텍스트 표시 로직
+    # if print_text and current_time - print_time > 5000:
+    #     print_text = None
+    #     print_time = 0
 
     # 아이템 생성
     if random.randint(1, 50) == 1:
@@ -113,7 +139,7 @@ while running:
 
     # 적 생성 및 이동
     if random.randint(1, 60 - level*10) == 1:
-        enemies.append(Enemy(random.randint(0, width - 50), -50))
+        enemies.append(create_enemy())
     for enemy in enemies[:]:
         enemy.move()
         if enemy.y > height:
@@ -133,6 +159,7 @@ while running:
                 if enemy.health <= 0:
                     if enemy in enemies:
                         enemies.remove(enemy)
+                        point += 1
                 break
 
         if bullet.x < 0 or bullet.x > width or bullet.y < 0 or bullet.y > height:
@@ -149,13 +176,12 @@ while running:
         else:
             effect.draw(screen)
 
-
     # 플레이어 그리기
     screen.blit(player_img, (player_x, player_y))
 
     # 체력 표시
-    health_text = font.render(f'Health: {player_health}', True, (255, 255, 255))
-    exp_text = font.render(f'Item: {exp}/{max_exp}', True, (255, 255, 255))
+    health_text = font.render(f'Health: {player_health}', True, (0, 0, 0))
+    exp_text = font.render(f'Item: {exp}/{max_exp}', True, (0, 0, 0))
     screen.blit(health_text, (width - 150, 10))
     screen.blit(exp_text, (width - 150, 30))
 
