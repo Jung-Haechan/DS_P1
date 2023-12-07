@@ -10,7 +10,7 @@ class Bullet:
     def __init__(self, x, y, angle):
         self.angle = angle
         self.image = None
-        self.size = [30, 30]
+        self.size = [20, 20]
         self.load_image('bullet.png')
         self.x = x
         self.y = y
@@ -46,7 +46,9 @@ class Bullet:
 class RegisterBullet(Bullet):
     def __init__(self, x, y, angle):
         super().__init__(x, y, angle)
+        self.size = [30, 30]
         self.load_image('register_bullet.png')
+
 
     def effect(self, enemy: Enemy.Enemy, enemies, effects, bullets):
         self.cooltime = 30  # 쿨타임 설정 (예: 30 프레임)
@@ -59,6 +61,7 @@ class RegisterBullet(Bullet):
 class CapacitorBullet(Bullet):
     def __init__(self, x, y, angle):
         super().__init__(x, y, angle)
+        self.size = [30, 30]
         self.load_image('capacitor_bullet.png')
         self.explosion_radius = 150
 
@@ -77,6 +80,7 @@ class CapacitorBullet(Bullet):
 class OscillatorBullet(Bullet):
     def __init__(self, x, y, angle):
         super().__init__(x, y, angle)
+        self.size = [20, 20]
         self.load_image('oscillator_bullet.png')
         self.power = 2
         self.speed = 24
@@ -89,6 +93,7 @@ class OscillatorBullet(Bullet):
 class MosfetBullet(Bullet):
     def __init__(self, x, y, angle):
         super().__init__(x, y, angle)
+        self.size = [20, 20]
         self.load_image('mosfet_bullet.png')
         self.power = 1
 

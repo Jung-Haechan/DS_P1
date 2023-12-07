@@ -1,18 +1,20 @@
 import pygame
 from configs import width, height
+import random
+
 
 
 # Enemy 클래스
 class Enemy:
     def __init__(self, x, y):
-        self.image = pygame.image.load('enemy.png')
         self.size = [30, 30]
-        self.image = pygame.transform.scale(self.image, (self.size[0], self.size[1]))
         self.x = x
         self.y = y
         self.health = 5
         self.max_health = 5
         self.speed = 3
+        self.direction = 1
+        self.type = 'enemy'
 
     def move(self):
         self.y += self.speed
@@ -46,5 +48,32 @@ class ExamEnemy(Enemy):
 class QuizEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
+        self.speed = 5
+        self.max_health = 3
+        self.health = 3
         self.image = pygame.image.load('quiz_enemy.png')
         self.image = pygame.transform.scale(self.image, (self.size[0], self.size[1]))
+
+
+class ProfessorEnemy(Enemy):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.speed = 4
+        self.max_health = 50
+        self.health = self.max_health
+        self.size = [30, 40]
+        self.image = pygame.image.load('professor.png')
+        self.image = pygame.transform.scale(self.image, (self.size[0], self.size[1]))
+        self.type = 'boss'
+
+    def move(self):
+        dir_change = random.randint(1, 40) == 1
+        if self.x < 50 or self.x > width - 50:
+            dir_change = True
+        if dir_change:
+            print(self.x)
+            self.direction = - self.direction
+            self.x += self.speed * self.direction
+
+        self.x += self.speed * self.direction
+
