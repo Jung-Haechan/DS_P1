@@ -157,7 +157,7 @@ def start_screen():
 def game_loop():
     global score
     # 게임 관련 변수 모음
-    level = 3
+    level = 0
     level_text = ['저항', '캐패시터', 'DC', '웨이퍼', '종강']
     exp = 0
     max_exp = 10
@@ -315,7 +315,7 @@ def game_loop():
             screen.blit(exp_text, (width - 140, 70))
 
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(30)
 
 
 def end_screen():
@@ -410,7 +410,7 @@ def ranking_screen():
         screen.blit(text_surface, (120, 30))
         for i, (user, r_score) in enumerate(ranking.items()):
             color = (255, 255, 100) if user == user_id and r_score == score else (255 - i*10, 255 - i*10, 255 - i*10)
-            text_surface = font.render(f"{i + 1}. {user}: {score}", True, color)
+            text_surface = font.render(f"{i + 1}. {user}: {r_score}", True, color)
             screen.blit(text_surface, (120, 80 + i*30))
             if i > 10:
                 break
@@ -424,6 +424,7 @@ def ranking_screen():
         pygame.display.flip()
 
 
-start_screen()
+ranking_screen()
+# start_screen()
 
 pygame.quit()
