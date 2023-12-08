@@ -39,7 +39,9 @@ class CapacitorItem(Item):
 class OscillatorItem(Item):
     def __init__(self, x, y):
         super().__init__(x, y)
+        self.size = [20, 20]
         self.image = pygame.image.load('oscillator_item.png')  # 폭발 아이템 이미지
+        self.image = pygame.transform.scale(self.image, (self.size[0], self.size[1]))
 
 
 class MosfetItem(Item):
@@ -47,5 +49,13 @@ class MosfetItem(Item):
         super().__init__(x, y)
         self.size = [20, 20]
         self.image = pygame.image.load('mosfet_item.png')  # 폭발 아이템 이미지
+        self.image = pygame.transform.scale(self.image, (self.size[0], self.size[1]))
+
+
+class StarItem(Item):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.size = [20, 20]
+        self.image = pygame.image.load('star.png')
         self.image = pygame.transform.scale(self.image, (self.size[0], self.size[1]))
 

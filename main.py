@@ -3,10 +3,10 @@ import math
 import random
 from Bullet import Bullet, RegisterBullet, CapacitorBullet, OscillatorBullet, MosfetBullet
 from Enemy import Enemy, ExamEnemy, QuizEnemy, ProfessorEnemy
-from Item import RegisterItem, CapacitorItem, OscillatorItem, MosfetItem
+from Item import RegisterItem, CapacitorItem, OscillatorItem, MosfetItem, StarItem
 from configs import width, height
 import os
-from utils import binary_search
+from utils import binary_search, bubble_sort_with_key
 
 # Pygame 초기화
 pygame.init()
@@ -14,19 +14,18 @@ screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('arialunicode', 20)
 
+# 플레이어 메시지 전달을 위한 변수 설정
 print_time = 0
 print_text = None
 printer = font.render('', True, (255, 255, 255))
 
 
-# for i in pygame.font.get_fonts():
-#     print(i)
 # 충돌 감지 함수
 def is_collision(x1, y1, x2, y2, distance=30):
     return math.sqrt((math.pow(x1 - x2, 2)) + (math.pow(y1 - y2, 2))) < distance
 
 
-# 아이템 랜덤 생성 함수
+# 아이템 생성 함수
 def create_item(level):
     if level == 0:
         return RegisterItem(random.randint(0, width - 50), -50)
@@ -37,9 +36,10 @@ def create_item(level):
     elif level == 3:
         return MosfetItem(random.randint(0, width - 50), -50)
     else:
-        return MosfetItem(random.randint(0, width - 50), -50)
+        return StarItem(random.randint(0, width - 50), -50)
 
 
+# 적 랜덤 생성 함수
 def create_enemy(x=None, y=-50):
     enemy_type = random.choice(['exam', 'quiz'])
     if x is None:
@@ -52,6 +52,7 @@ def create_enemy(x=None, y=-50):
         return Enemy(x, y)
 
 
+# 총알 생성 함수
 def create_bullet(player_x, player_y, level):
     mx, my = pygame.mouse.get_pos()
     angle = math.atan2(my - player_y, mx - player_x)
@@ -69,21 +70,22 @@ def create_bullet(player_x, player_y, level):
         return MosfetBullet(player_x, player_y, angle)
 
 
+# 백그라운드 어둡게 조정
 def darken_image(image, amount=150):
-    """이미지를 어둡게 만드는 함수"""
     dark = pygame.Surface((image.get_width(), image.get_height()), flags=pygame.SRCALPHA)
     dark.fill((amount, amount, amount, 0))
     image.blit(dark, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
 
 
+# users.txt에서 사용자 정보를 로드합니다
 def load_users():
-    """ users.txt에서 사용자 정보를 로드합니다 """
     if not os.path.exists('users.txt'):
         return {}
     with open('users.txt', 'r') as file:
         return {line.split()[0]: int(line.split()[1]) for line in file.readlines()}
 
 
+# 사용자 점수 기록
 def update_user_score(user_id, score):
     """ 사용자의 점수를 업데이트하고 파일에 기록합니다 """
     users = load_users()
@@ -95,18 +97,18 @@ def update_user_score(user_id, score):
             file.write(f'{user_id} {score}\n')
 
 
+# 전역 변수 설정
 score = 0
 user_id = ''
+
+
+# 시작 화면
 def start_screen():
-    """ 시작 화면과 사용자 ID 입력 처리 """
     global user_id
     input_active = False
     global font
 
-    input_box = pygame.Rect(100, 100, 200, 40)
-    button = pygame.Rect(100, 150, 200, 40)
-    button_text = font.render('R관으로', True, (255, 255, 255))
-
+    # 배경 로드
     background_img = pygame.image.load('r_background.png')
     background_img = pygame.transform.scale(background_img, (width, height))
 
@@ -119,6 +121,7 @@ def start_screen():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 input_active = True
             if event.type == pygame.KEYDOWN:
+                # 이름 입력하기
                 if input_active:
                     if event.key == pygame.K_RETURN and user_id.isalnum():
                         game_loop()
@@ -127,48 +130,59 @@ def start_screen():
                         user_id = user_id[:-1]
                     else:
                         user_id += event.unicode
-        pygame.draw.rect(screen, (200, 200, 200), input_box)
         # 버튼 그리기
+        button = pygame.Rect(100, 150, 200, 40)
         pygame.draw.rect(screen, (0, 100, 0), button)
+        button_text = font.render('R관으로', True, (255, 255, 255))
         screen.blit(button_text, (button.x + 50, button.y + 5))
+
+        # input 박스 그리기
+        input_box = pygame.Rect(100, 100, 200, 40)
+        pygame.draw.rect(screen, (200, 200, 200), input_box)
         if user_id:
             text_surface = font.render(user_id, True, (0, 0, 0))
         else:
             text_surface = font.render('이름', True, (150, 150, 150))
 
+        # 캐릭터 그리기
         player = pygame.image.load('player.png')
         player = pygame.transform.scale(player, (100, 160))
         screen.blit(player, (width // 2 - 50, height // 2))
+
         screen.blit(text_surface, (input_box.x + 10, input_box.y + 5))
         pygame.display.flip()
 
 
+# 게임 루프
 def game_loop():
     global score
-    level = 4
+    # 게임 관련 변수 모음
+    level = 3
     level_text = ['저항', '캐패시터', 'DC', '웨이퍼', '종강']
-    level_val = ['register', 'capacitor', 'oscillator', 'mosfet']
-    exp = 9
+    exp = 0
     max_exp = 10
-
-    background_img = pygame.image.load('background.png')
-    background_img = pygame.transform.scale(background_img, (width, height))
-    darken_image(background_img)
 
     # 플레이어 설정
     player_img = pygame.image.load('player.png')
     player_img = pygame.transform.scale(player_img, (30, 40))
     player_x, player_y = width // 2, height // 2
     player_speed = 8
-    player_health = 5
+    player_health = 100
 
-    # 게임 변수
+    # 게임 내 오브젝트
     enemies = []
     bullets = []
     items = []
     effects = []
 
     boss_time = 0
+
+    # 배경 로드
+    background_img = pygame.image.load('background.png')
+    background_img = pygame.transform.scale(background_img, (width, height))
+    darken_image(background_img)
+
+    # 플레이어 메시지 출력 함수
     def set_print_text(text):
         global printer, print_time, print_text
         print_text = text
@@ -176,7 +190,6 @@ def game_loop():
         print_time = current_time
 
     while True:
-        screen.fill((0, 0, 0))
         current_time = pygame.time.get_ticks()
         screen.blit(background_img, (0, 0))
 
@@ -186,11 +199,11 @@ def game_loop():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return None
+            # 총알 발사
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 bullets.append(create_bullet(player_x, player_y, level))
 
-        #
-        # # 텍스트 표시 로직
+        # 플레이어 메시지 표시 로직
         if print_text and current_time - print_time < 5000:
             text_x = player_x - printer.get_width() / 2
             text_y = player_y - 60  # 플레이어 위에 표시
@@ -204,6 +217,7 @@ def game_loop():
             if random.randint(1, 60 - level * 10) == 1:
                 enemies.append(create_enemy())
         else:
+            # 보스 생성
             if boss_time and current_time - boss_time > 5000:
                 if random.randint(1, 10) == 1:
                     for enemy in enemies:
@@ -226,12 +240,14 @@ def game_loop():
             if is_collision(player_x, player_y, item.x, item.y, 20):
                 items.remove(item)
                 exp += 1
+                # 레벨업
                 if exp == max_exp:
                     level += 1
                     exp = 0
-                    if level < 4:
+                    if level < 5:
                         set_print_text(f'{level_text[level-1]}을 얻었다!')
                     else:
+                        # 보스 생성
                         set_print_text('종강이다! 앗 그런데 교수님이....')
                         boss_time = current_time
                         enemies.append(professor)
@@ -260,12 +276,14 @@ def game_loop():
                     if enemy.health <= 0:
                         if enemy in enemies:
                             enemies.remove(enemy)
+                            # 게임 종료
                             if enemy.type == 'boss':
                                 score = player_health
                                 end_screen()
                                 return None
                     break
 
+            # 총알 충돌
             if bullet.x < 0 or bullet.x > width or bullet.y < 0 or bullet.y > height:
                 if bullet in bullets:
                     bullets.remove(bullet)
@@ -287,17 +305,14 @@ def game_loop():
             score = player_health
             end_screen()
             return None
-        # 체력 표시
+        # 체력, 플레이어 이름, 남은 아이템 수 표시
         user_text = font.render(f'{user_id}', True, (255, 255, 255))
-        screen.blit(user_text, (width - 120, 10))
+        screen.blit(user_text, (width - 140, 10))
         health_text = font.render(f'학점: {player_health}', True, (255, 255, 255))
-        screen.blit(health_text, (width - 120, 40))
+        screen.blit(health_text, (width - 140, 40))
         if level < 5:
             exp_text = font.render(f'{level_text[level]}: {exp}/{max_exp}', True, (255, 255, 255))
-            screen.blit(exp_text, (width - 120, 70))
-
-        pygame.display.flip()
-        clock.tick(60)
+            screen.blit(exp_text, (width - 140, 70))
 
         pygame.display.flip()
         clock.tick(60)
@@ -307,9 +322,13 @@ def end_screen():
     global score
     global user_id
 
+    # 배경 로드
     background_img = pygame.image.load('r_background.png')
     background_img = pygame.transform.scale(background_img, (width, height))
     darken_image(background_img, 100)
+
+    if user_id:
+        update_user_score(user_id, score)  # 새로운 사용자 추가
 
     while True:
         screen.blit(background_img, (0, 0))
@@ -317,9 +336,16 @@ def end_screen():
             if event.type == pygame.QUIT:
                 return None
             if event.type == pygame.KEYDOWN:
+                # restart
                 if event.key == pygame.K_r:
                     game_loop()
                     return None
+                # 랭킹 보기
+                if event.key == pygame.K_t:
+                    ranking_screen()
+                    return None
+
+        # 스코어에 따른 그레이드와 텍스트 출력
         if score <= 0:
             grade = 'F'
             grade_text = '지금이라도 드랍하게.'
@@ -337,14 +363,23 @@ def end_screen():
             grade_text = '대학원 입학을 축하하네!'
 
         # 버튼 그리기
-        button = pygame.Rect(100, 500, 200, 40)
-        button_text = font.render('다시하려면 R키', True, (255, 255, 255))
+        button = pygame.Rect(100, 450, 200, 40)
+        button_text = font.render('다시하기 (R)', True, (255, 255, 255))
         pygame.draw.rect(screen, (0, 100, 0), button)
-        screen.blit(button_text, (button.x + 20, button.y + 5))
+        screen.blit(button_text, (button.x + 40, button.y + 5))
 
+        # 버튼 그리기
+        button = pygame.Rect(100, 500, 200, 40)
+        button_text = font.render('랭킹보기 (T)', True, (255, 255, 255))
+        pygame.draw.rect(screen, (0, 100, 0), button)
+        screen.blit(button_text, (button.x + 40, button.y + 5))
+
+        # 교수님 캐릭터 그리기
         professor = pygame.image.load('professor.png')
         professor = pygame.transform.scale(professor, (100, 160))
         screen.blit(professor, (width // 2 - 50, height // 2 - 80))
+
+        # 텍스트 출력
         text_surface1 = font.render(f"{user_id} 학생!", True, (255, 255, 255))
         text_surface2 = font.render(f"자네 학점은 {grade}일세", True, (255, 255, 255))
         text_surface3 = font.render(grade_text, True, (255, 255, 255))
@@ -354,7 +389,41 @@ def end_screen():
         pygame.display.flip()
 
 
+def ranking_screen():
+    global score
+    global user_id
+    users = load_users()
+    ranking = bubble_sort_with_key(list(users.values()), list(users.keys()))
+    users[user_id] = score
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return None
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    game_loop()
+                    return None
+
+        # 랭킹 출력
+        text_surface = font.render('RANKING', True, (255, 255, 255))
+        screen.blit(text_surface, (120, 30))
+        for i, (user, r_score) in enumerate(ranking.items()):
+            color = (255, 255, 100) if user == user_id and r_score == score else (255 - i*10, 255 - i*10, 255 - i*10)
+            text_surface = font.render(f"{i + 1}. {user}: {score}", True, color)
+            screen.blit(text_surface, (120, 80 + i*30))
+            if i > 10:
+                break
+
+        # 버튼 출력
+        button = pygame.Rect(100, 500, 200, 40)
+        button_text = font.render('다시하기 (R)', True, (255, 255, 255))
+        pygame.draw.rect(screen, (0, 100, 0), button)
+        screen.blit(button_text, (button.x + 40, button.y + 5))
+
+        pygame.display.flip()
+
+
 start_screen()
-update_user_score(user_id, score)  # 새로운 사용자 추가
 
 pygame.quit()

@@ -71,7 +71,6 @@ class ProfessorEnemy(Enemy):
         if self.x < 50 or self.x > width - 50:
             dir_change = True
         if dir_change:
-            print(self.x)
             self.direction = - self.direction
             self.x += self.speed * self.direction
 
